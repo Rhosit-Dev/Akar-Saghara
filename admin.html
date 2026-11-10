@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galeri Kenangan Mangrove</title>
+<style>
+  :root{ --deep:#0e3b34; --teal:#2f7d73; --lime:#9ccc65; --mist:#eef3ee; --ink:#16302b; --mud:#6b5a4a; --line:#cddbd2; }
+  @media (prefers-color-scheme: dark){ :root{ --mist:#0d1f1c; --ink:#e6f0ea; --mud:#a8b8ae; --line:#27453f; } }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--mist);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+  h1{font:700 28px/1.15 Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mud);margin:0 0 16px}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+  input{flex:1 1 180px;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;background:transparent;color:inherit;font:inherit}
+  button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 16px;cursor:pointer;background:var(--deep);color:#fff}
+  button.ghost{background:transparent;border:2px solid var(--deep);color:var(--ink)}
+  button:disabled{opacity:.55}
+  input:focus,button:focus-visible{outline:3px solid var(--lime);outline-offset:1px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .item{background:transparent;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .item img{width:100%;display:block;aspect-ratio:1080/1560;object-fit:cover;background:var(--line)}
+  .meta{padding:10px 12px;font-size:14px}
+  .meta b{display:block}
+  .meta a{color:var(--teal);font-weight:600}
+  .empty{color:var(--mud);padding:30px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Galeri kenangan</h1>
+  <p class="sub" id="info">Memuat...</p>
+  <div class="bar">
+    <input id="cari" type="search" placeholder="Cari nama atau nomor pohon">
+    <button class="ghost" id="muat">Muat ulang</button>
+    <button id="zip">Unduh semua (.zip)</button>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="config.js"></script>
+<script>
+const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let data = [];
+
+async function muat(){
+  $("info").textContent = "Memuat...";
+  const { data: rows, error } = await sb.from("kenangan").select("*").order("created_at", { ascending: false }).limit(1000);
+  if (error){ $("info").textContent = "Gagal memuat: " + error.message; return; }
+  data = rows; tampil();
+}
+
+function tampil(){
+  const q = $("cari").value.trim().toLowerCase();
+  const list = data.filter(r => !q || r.nama.toLowerCase().includes(q) || r.pohon.toLowerCase().includes(q));
+  $("info").textContent = list.length + " kartu" + (q ? " (dari " + data.length + ")" : "");
+  const g = $("grid"); g.innerHTML = "";
+  if (!list.length){ g.innerHTML = '<div class="empty">Belum ada kartu.</div>'; return; }
+  for (const r of list){
+    const d = document.createElement("div"); d.className = "item";
+    const im = document.createElement("img"); im.loading = "lazy"; im.src = r.kartu_url; im.alt = "Kartu " + r.nama;
+    const m = document.createElement("div"); m.className = "meta";
+    const b = document.createElement("b"); b.textContent = r.nama;
+    const t = document.createElement("span"); t.textContent = "Pohon " + r.pohon + " \u2022 " + new Date(r.created_at).toLocaleString("id-ID", {dateStyle:"medium", timeStyle:"short"});
+    const a = document.createElement("a"); a.href = r.kartu_url; a.target = "_blank"; a.rel = "noopener"; a.textContent = " Buka";
+    m.append(b, t, a); d.append(im, m); g.append(d);
+  }
+}
+
+$("cari").addEventListener("input", tampil);
+$("muat").addEventListener("click", muat);
+
+$("zip").addEventListener("click", async () => {
+  if (!data.length) return;
+  const btn = $("zip"); btn.disabled = true;
+  const zip = new JSZip(); let i = 0;
+  for (const r of data){
+    i++; btn.textContent = "Mengemas " + i + "/" + data.length;
+    try{
+      const blob = await (await fetch(r.kartu_url)).blob();
+      const aman = r.nama.replace(/[^\w\-]+/g, "_").slice(0, 30);
+      zip.file("pohon-" + r.pohon + "_" + aman + "_" + i + ".jpg", blob);
+    }catch(e){ console.error(e); }
+  }
+  const out = await zip.generateAsync({ type: "blob" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(out); a.download = "kartu-mangrove.zip";
+  document.body.appendChild(a); a.click(); a.remove();
+  btn.disabled = false; btn.textContent = "Unduh semua (.zip)";
+});
+
+muat();
+</script>
+</body>
+</html>

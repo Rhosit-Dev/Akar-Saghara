@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kartu Kenangan Mangrove</title>
+  <style>
+    :root {
+      --deep: #0e3b34;
+      --teal: #2f7d73;
+      --lime: #9ccc65;
+      --mist: #eef3ee;
+      --ink: #16302b;
+      --mud: #6b5a4a;
+      --line: #cddbd2;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --mist: #0d1f1c;
+        --ink: #e6f0ea;
+        --mud: #a8b8ae;
+        --line: #27453f;
+      }
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--mist);
+      color: var(--ink);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif
+    }
+
+    .wrap {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 18px 48px
+    }
+
+    header {
+      padding: 8px 0 20px
+    }
+
+    .tree {
+      display: inline-block;
+      background: var(--deep);
+      color: #e9f7ef;
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 14px;
+      margin-bottom: 10px
+    }
+
+    h1 {
+      font: 700 28px/1.15 Georgia, "Times New Roman", serif;
+      margin: 0 0 6px
+    }
+
+    p.lead {
+      margin: 0;
+      color: var(--mud)
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin: 18px 0 6px
+    }
+
+    input[type=text],
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      background: transparent;
+      color: inherit;
+      font: inherit
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical
+    }
+
+    input:focus,
+    textarea:focus,
+    button:focus-visible {
+      outline: 3px solid var(--lime);
+      outline-offset: 1px
+    }
+
+    .count {
+      font-size: 13px;
+      color: var(--mud);
+      text-align: right
+    }
+
+    .photo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 2px dashed var(--teal);
+      border-radius: 14px;
+      padding: 22px 14px;
+      cursor: pointer;
+      text-align: center;
+      color: var(--teal);
+      font-weight: 600
+    }
+
+    .photo.has {
+      border-style: solid
+    }
+
+    .photo input {
+      display: none
+    }
+
+    button {
+      font: inherit;
+      font-weight: 700;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      width: 100%;
+      cursor: pointer
+    }
+
+    .primary {
+      background: var(--deep);
+      color: #fff;
+      margin-top: 22px
+    }
+
+    .ghost {
+      background: transparent;
+      border: 2px solid var(--deep);
+      color: var(--ink);
+      margin-top: 10px
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: default
+    }
+
+    .consent {
+      font-size: 13px;
+      color: var(--mud);
+      margin-top: 10px
+    }
+
+    .err {
+      color: #b3261e;
+      font-weight: 600;
+      margin-top: 12px
+    }
+
+    #hasil {
+      display: none
+    }
+
+    #hasil img {
+      width: 100%;
+      border-radius: 14px;
+      display: block;
+      box-shadow: 0 6px 24px rgba(14, 59, 52, .25)
+    }
+
+    .ok {
+      background: var(--deep);
+      color: #e9f7ef;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin: 14px 0
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--mud);
+      margin-top: 8px;
+      text-align: center
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <span class="tree" id="badge"></span>
+      <h1>Kartu kenangan penanamanmu</h1>
+      <p class="lead">Unggah fotomu, tulis pesan, dan kartumu langsung jadi.</p>
+    </header>
+
+    <form id="form" novalidate>
+      <label for="foto">Foto saat menanam</label>
+      <label class="photo" id="photoBox" style="font-weight:600;margin:0">
+        <input id="foto" type="file" accept="image/*">
+        <span id="photoText">Pilih atau ambil foto</span>
+      </label>
+
+      <label for="nama">Nama</label>
+      <input id="nama" type="text" maxlength="40" autocomplete="name" placeholder="Nama lengkap atau panggilan">
+
+      <label for="pesan">Kesan dan pesan</label>
+      <textarea id="pesan" maxlength="160" placeholder="Tulis kesanmu setelah menanam mangrove"></textarea>
+      <div class="count"><span id="n">0</span>/160</div>
+
+      <div id="err" class="err" role="alert"></div>
+      <button class="primary" id="btnBuat" type="submit">Buat kartu</button>
+      <p class="consent">Dengan melanjutkan, kamu setuju kartu ini disimpan dan ditampilkan oleh panitia.</p>
+    </form>
+
+    <section id="hasil">
+      <canvas id="kanvas" style="display:none"></canvas>
+      <img id="preview" alt="Pratinjau kartu kenangan">
+      <div class="ok" id="status"></div>
+      <button class="primary" id="btnKirim" type="button">Simpan kartu</button>
+      <button class="ghost" id="btnUnduh" type="button" style="display:none">Unduh kartu ke perangkat</button>
+      <button class="ghost" id="btnUbah" type="button">Ubah isian</button>
+      <p class="hint" id="hint" style="display:none">Jika tombol unduh tidak berfungsi, tekan lama gambar lalu pilih
+        simpan.</p>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script>
+    const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+    const $ = id => document.getElementById(id);
+
+    // Nomor pohon dari QR: ?pohon=017
+    const pohon = (new URLSearchParams(location.search).get("pohon") || "").replace(/[^\w-]/g, "").slice(0, 20);
+    $("badge").textContent = pohon ? "Pohon No. " + pohon : "Pohon mangrove";
+
+    let fileFoto = null, blobKartu = null, tersimpan = false;
+
+    $("foto").addEventListener("change", e => {
+      fileFoto = e.target.files[0] || null;
+      $("photoBox").classList.toggle("has", !!fileFoto);
+      $("photoText").textContent = fileFoto ? "Foto dipilih: " + fileFoto.name : "Pilih atau ambil foto";
+    });
+    $("pesan").addEventListener("input", e => { $("n").textContent = e.target.value.length; });
+
+    // ---------- Menggambar kartu ----------
+    function roundPath(x, px, py, w, h, r) {
+      x.beginPath();
+      x.moveTo(px + r, py);
+      x.arcTo(px + w, py, px + w, py + h, r);
+      x.arcTo(px + w, py + h, px, py + h, r);
+      x.arcTo(px, py + h, px, py, r);
+      x.arcTo(px, py, px + w, py, r);
+      x.closePath();
+    }
+    function wrap(x, text, maxW) {
+      const lines = []; let line = "";
+      for (const w of text.split(/\s+/)) {
+        const t = line ? line + " " + w : w;
+        if (x.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    async function gambarKartu(file, nama, pesan) {
+      const W = 1080, H = 1560;
+      const c = $("kanvas"); c.width = W; c.height = H;
+      const x = c.getContext("2d");
+
+      // latar
+      const g = x.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, "#0e3b34"); g.addColorStop(1, "#2f7d73");
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+      // akar mangrove tipis sebagai ornamen latar
+      x.strokeStyle = "rgba(156,204,101,.18)"; x.lineWidth = 6; x.lineCap = "round";
+      for (let i = 0; i < 9; i++) {
+        const bx = 60 + i * 120;
+        x.beginPath(); x.moveTo(bx, H);
+        x.bezierCurveTo(bx - 40, H - 120, bx + 50, H - 200, bx + 10, H - 300);
+        x.stroke();
+      }
+
+      // judul
+      x.textAlign = "center"; x.fillStyle = "#e9f7ef";
+      x.font = "700 46px Georgia, serif";
+      x.fillText(CONFIG.EVENT_NAME, W / 2, 95);
+      x.fillStyle = "#9ccc65"; x.font = "italic 28px Georgia, serif";
+      x.fillText(CONFIG.EVENT_SUB, W / 2, 140);
+
+      // foto (cover crop, EXIF rotasi otomatis)
+      const px = 60, py = 175, pw = 960, ph = 920;
+      const img = await createImageBitmap(file, { imageOrientation: "from-image" });
+      x.save(); roundPath(x, px, py, pw, ph, 36); x.clip();
+      const s = Math.max(pw / img.width, ph / img.height);
+      const dw = img.width * s, dh = img.height * s;
+      x.drawImage(img, px + (pw - dw) / 2, py + (ph - dh) / 2, dw, dh);
+      x.restore();
+      x.lineWidth = 8; x.strokeStyle = "#9ccc65"; roundPath(x, px, py, pw, ph, 36); x.stroke();
+
+      // panel pesan
+      const qy = 1125, qh = 340;
+      x.fillStyle = "#eef3ee"; roundPath(x, px, qy, pw, qh, 36); x.fill();
+      x.fillStyle = "#16302b"; x.font = "italic 36px Georgia, serif";
+      let lines = wrap(x, "\u201C" + pesan.trim() + "\u201D", 860);
+      if (lines.length > 5) { lines = lines.slice(0, 5); lines[4] = lines[4].replace(/.{0,3}$/, "\u2026"); }
+      const lh = 50, blok = lines.length * lh;
+      let y = qy + 20 + (240 - blok) / 2 + 36;
+      for (const l of lines) { x.fillText(l, W / 2, y); y += lh; }
+      x.fillStyle = "#0e3b34"; x.font = "700 40px system-ui, sans-serif";
+      x.fillText(nama.trim(), W / 2, qy + qh - 30);
+
+      // kaki
+      x.fillStyle = "#e9f7ef"; x.font = "30px system-ui, sans-serif";
+      x.fillText(pohon ? "Pohon No. " + pohon : "Pohon mangrove", W / 2, 1520);
+
+      return new Promise(res => c.toBlob(res, "image/jpeg", 0.9));
+    }
+
+    // ---------- Alur ----------
+    $("form").addEventListener("submit", async e => {
+      e.preventDefault();
+      $("err").textContent = "";
+      const nama = $("nama").value.trim(), pesan = $("pesan").value.trim();
+      if (!fileFoto) return $("err").textContent = "Pilih foto terlebih dahulu.";
+      if (!nama) return $("err").textContent = "Isi namamu.";
+      if (!pesan) return $("err").textContent = "Tulis kesan dan pesanmu.";
+      $("btnBuat").disabled = true; $("btnBuat").textContent = "Membuat kartu...";
+      try {
+        blobKartu = await gambarKartu(fileFoto, nama, pesan);
+        tersimpan = false;
+        $("preview").src = URL.createObjectURL(blobKartu);
+        $("status").textContent = "Kartumu sudah jadi. Simpan agar masuk ke galeri panitia.";
+        $("btnKirim").style.display = ""; $("btnKirim").disabled = false; $("btnKirim").textContent = "Simpan kartu";
+        $("btnUnduh").style.display = ""; $("hint").style.display = "block";
+        $("form").style.display = "none"; $("hasil").style.display = "block";
+        scrollTo(0, 0);
+      } catch (err) {
+        console.error(err);
+        $("err").textContent = "Foto tidak bisa dibaca. Coba pilih foto lain.";
+      }
+      $("btnBuat").disabled = false; $("btnBuat").textContent = "Buat kartu";
+    });
+
+    $("btnUbah").addEventListener("click", () => {
+      $("hasil").style.display = "none"; $("form").style.display = "block";
+    });
+
+    $("btnKirim").addEventListener("click", async () => {
+      if (tersimpan) return;
+      $("btnKirim").disabled = true; $("btnKirim").textContent = "Menyimpan...";
+      try {
+        const path = "pohon-" + (pohon || "x") + "/" + Date.now() + ".jpg";
+        const up = await sb.storage.from(CONFIG.BUCKET).upload(path, blobKartu, { contentType: "image/jpeg" });
+        if (up.error) throw up.error;
+        const url = sb.storage.from(CONFIG.BUCKET).getPublicUrl(path).data.publicUrl;
+        const ins = await sb.from("kenangan").insert({
+          pohon: pohon || "-", nama: $("nama").value.trim(), pesan: $("pesan").value.trim(), kartu_url: url
+        });
+        if (ins.error) throw ins.error;
+        tersimpan = true;
+        $("status").textContent = "Tersimpan. Terima kasih sudah menanam!";
+        $("btnKirim").style.display = "none"; $("btnUbah").style.display = "none";
+        $("btnUnduh").style.display = ""; $("hint").style.display = "block";
+      } catch (err) {
+        console.error(err);
+        $("status").textContent = "Gagal menyimpan. Periksa sinyal, lalu coba lagi.";
+        $("btnKirim").disabled = false; $("btnKirim").textContent = "Coba simpan lagi";
+      }
+    });
+
+    $("btnUnduh").addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blobKartu);
+      a.download = "kartu-mangrove-" + (pohon || "kenangan") + ".jpg";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+  </script>
+</body>
+
+</html>
