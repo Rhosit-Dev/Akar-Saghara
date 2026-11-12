@@ -1,11 +1,11 @@
 # Panduan Pemasangan: Kartu Kenangan Mangrove
 
 Isi folder:
-- index.html : halaman peserta (dibuka lewat QR)
+- index.html : halaman peserta
 - admin.html : galeri untuk tim PDD
-- qr.html    : pembuat QR massal siap cetak
 - config.js  : tempat mengisi kunci Supabase
 - setup.sql  : perintah untuk membuat tabel dan penyimpanan
+- assets/template-mangrove.png : desain kartu transparan yang digunakan sebagai template
 
 ## 1. Buat project Supabase (gratis, tanpa kartu kredit)
 1. Daftar di supabase.com, lalu pilih New project.
@@ -29,9 +29,7 @@ Isi folder:
 3. Catat alamat situs yang diberikan, misalnya https://nama-situs.netlify.app
 
 ## 5. Buat QR
-1. Buka https://nama-situs.netlify.app/qr.html
-2. Atur nomor pohon (misalnya 1 sampai 100), klik Buat QR, lalu Cetak.
-3. Cetak setelah alamat situs final. Jika alamat berubah, QR harus dicetak ulang.
+Buat QR menggunakan layanan atau aplikasi pilihanmu setelah alamat situs final. QR yang berisi alamat utama situs akan membuka halaman peserta tanpa nomor pohon. Jika ingin nomor pohon tercatat di kartu, tambahkan parameter pada alamat, misalnya `https://nama-situs.netlify.app/?pohon=001`.
 
 ## 6. Uji sebelum acara
 - Scan satu QR memakai HP, unggah foto, isi nama dan pesan, lalu simpan.
